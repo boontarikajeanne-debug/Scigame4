@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Matter Bros: ตะลุยโลกสมบัติและสถานะของสสาร (ป.4)</title>
+  <meta name="description" content="เกมการศึกษาวิทยาศาสตร์ ป.4 สไตล์ 2D Retro Pixel Platformer เรียนรู้สมบัติ 5 ประการและสถานะของสสาร (ของแข็ง ของเหลว แก๊ส)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800;900&family=Press+Start+2P&family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #5c94fc;
+      color: #f8fafc;
+      font-family: 'Prompt', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .font-pixel { font-family: 'Press Start 2P', monospace; }
+    .font-kanit { font-family: 'Kanit', sans-serif; }
+    .font-prompt { font-family: 'Prompt', sans-serif; }
+
+    /* Retro Pixel UI */
+    .pixel-box {
+      background: rgba(30, 41, 59, 0.92);
+      backdrop-filter: blur(6px);
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px 0px #0f172a, inset 4px 4px 0px 0px #475569, 0 6px 12px rgba(0,0,0,0.5);
+    }
+    .pixel-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      font-weight: 700;
+      border: 4px solid #000;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.08s ease;
+      user-select: none;
+    }
+    .pixel-btn:active {
+      transform: translateY(3px);
+      box-shadow: none !important;
+    }
+    .pixel-btn-green {
+      background: #16a34a;
+      color: #fff;
+      box-shadow: inset -3px -3px 0px 0px #14532d, inset 3px 3px 0px 0px #4ade80, 0 4px 0 0 #000;
+    }
+    .pixel-btn-green:hover { background: #22c55e; }
+    .pixel-btn-red {
+      background: #dc2626;
+      color: #fff;
+      box-shadow: inset -3px -3px 0px 0px #7f1d1d, inset 3px 3px 0px 0px #f87171, 0 4px 0 0 #000;
+    }
+    .pixel-btn-red:hover { background: #ef4444; }
+    .pixel-btn-blue {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: inset -3px -3px 0px 0px #1e3a8a, inset 3px 3px 0px 0px #60a5fa, 0 4px 0 0 #000;
+    }
+    .pixel-btn-blue:hover { background: #3b82f6; }
+    .pixel-btn-yellow {
+      background: #eab308;
+      color: #000;
+      box-shadow: inset -3px -3px 0px 0px #854d0e, inset 3px 3px 0px 0px #fef08a, 0 4px 0 0 #000;
+    }
+    .pixel-btn-yellow:hover { background: #facc15; }
+
+    /* Mobile Virtual Gamepad */
+    .gamepad-container {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    .pad-touch-btn {
+      touch-action: none !important;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .pad-touch-btn:active {
+      transform: translateY(4px) scale(0.96);
+      filter: brightness(1.2);
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 8px;
+      }
+      .hud {
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+        gap: 6px !important;
+      }
+      .pixel-box {
+        padding: 14px 10px !important;
+      }
+    }
+
+    /* HUD Bar */
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(2, 6, 23, 0.9);
+      backdrop-filter: blur(8px);
+      border: 4px solid #334155;
+      padding: 10px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-card {
+      background: rgba(30, 41, 59, 0.96);
+      border: 4px solid #f59e0b;
+      border-radius: 8px;
+      max-width: 820px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    }
+
+    .hidden { display: none !important; }
+
+    @keyframes coinSpin {
+      0%, 100% { transform: scaleX(1); }
+      50% { transform: scaleX(0.2); }
+    }
+    .coin-spin {
+      display: inline-block;
+      animation: coinSpin 0.9s steps(6, jump-none) infinite;
+    }
+  </style>
+</head>
+<body>
+  <!-- Self-contained Super Mario Cartoon Background (Works 100% offline & in single-file) -->
+  <div id="mario-bg-wrap" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; overflow: hidden;">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYBottom slice" style="width: 100%; height: 100%; display: block;" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Sky Gradient -->
+        <linearGradient id="marioSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="50%" stop-color="#7dd3fc"/>
+          <stop offset="100%" stop-color="#bae6fd"/>
+        </linearGradient>
+
+        <!-- Pipe Green Gradient -->
+        <linearGradient id="pipeGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#15803d"/>
+          <stop offset="25%" stop-color="#4ade80"/>
+          <stop offset="55%" stop-color="#22c55e"/>
+          <stop offset="85%" stop-color="#16a34a"/>
+          <stop offset="100%" stop-color="#14532d"/>
+        </linearGradient>
+
+        <!-- Question Block Gradient -->
+        <linearGradient id="blockGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fef08a"/>
+          <stop offset="20%" stop-color="#facc15"/>
+          <stop offset="100%" stop-color="#ca8a04"/>
+        </linearGradient>
+
+        <!-- Cartoon Cloud Definition -->
+        <g id="marioCloud">
+          <ellipse cx="60" cy="50" rx="40" ry="26" fill="#f8fafc"/>
+          <ellipse cx="110" cy="38" rx="46" ry="32" fill="#ffffff"/>
+          <ellipse cx="160" cy="50" rx="38" ry="24" fill="#f8fafc"/>
+          <rect x="30" y="44" width="160" height="26" rx="10" fill="#ffffff"/>
+          <!-- Cloud Eyes (Retro style) -->
+          <ellipse cx="98" cy="46" rx="3.5" ry="6" fill="#0f172a"/>
+          <ellipse cx="122" cy="46" rx="3.5" ry="6" fill="#0f172a"/>
+          <circle cx="97" cy="44" r="1.5" fill="#ffffff"/>
+          <circle cx="121" cy="44" r="1.5" fill="#ffffff"/>
+        </g>
+      </defs>
+
+      <!-- 1. Sky -->
+      <rect width="1440" height="900" fill="url(#marioSky)"/>
+
+      <!-- 2. Clouds -->
+      <use href="#marioCloud" x="120" y="60" opacity="0.95" transform="scale(1.1)"/>
+      <use href="#marioCloud" x="680" y="40" opacity="0.9" transform="scale(0.9)"/>
+      <use href="#marioCloud" x="1100" y="80" opacity="0.92" transform="scale(1.0)"/>
+      <use href="#marioCloud" x="420" y="140" opacity="0.8" transform="scale(0.7)"/>
+
+      <!-- 3. Distant Mountains/Hills (Soft Mint Green) -->
+      <path d="M-50,900 L-50,620 Q160,460 380,590 Q620,710 880,540 Q1120,400 1340,580 Q1420,630 1500,640 L1500,900 Z" fill="#86efac" opacity="0.75" stroke="#16a34a" stroke-width="4"/>
+
+      <!-- 4. Midground Rolling Hills (Vibrant Mario Green) -->
+      <path d="M-50,900 L-50,680 Q140,510 340,640 Q540,740 760,590 Q980,450 1200,620 Q1380,720 1500,660 L1500,900 Z" fill="#22c55e" stroke="#15803d" stroke-width="5"/>
+
+      <!-- Hill Eyes/Details -->
+      <g opacity="0.85">
+        <ellipse cx="220" cy="620" rx="3" ry="7" fill="#0f172a"/>
+        <ellipse cx="236" cy="620" rx="3" ry="7" fill="#0f172a"/>
+        <ellipse cx="940" cy="570" rx="3" ry="7" fill="#0f172a"/>
+        <ellipse cx="956" cy="570" rx="3" ry="7" fill="#0f172a"/>
+      </g>
+
+      <!-- 5. Bushes -->
+      <g transform="translate(60, 680)">
+        <ellipse cx="30" cy="40" rx="35" ry="24" fill="#15803d"/>
+        <ellipse cx="70" cy="30" rx="42" ry="28" fill="#16a34a"/>
+        <ellipse cx="110" cy="40" rx="35" ry="24" fill="#15803d"/>
+        <circle cx="50" cy="32" r="6" fill="#f43f5e"/>
+        <circle cx="50" cy="32" r="2.5" fill="#fef08a"/>
+        <circle cx="88" cy="36" r="6" fill="#38bdf8"/>
+        <circle cx="88" cy="36" r="2.5" fill="#fef08a"/>
+      </g>
+
+      <g transform="translate(1020, 670)">
+        <ellipse cx="40" cy="40" rx="40" ry="26" fill="#15803d"/>
+        <ellipse cx="90" cy="30" rx="46" ry="30" fill="#16a34a"/>
+        <ellipse cx="140" cy="40" rx="40" ry="26" fill="#15803d"/>
+        <circle cx="70" cy="34" r="6" fill="#eab308"/>
+        <circle cx="70" cy="34" r="2.5" fill="#fff"/>
+        <circle cx="115" cy="38" r="6" fill="#f43f5e"/>
+        <circle cx="115" cy="38" r="2.5" fill="#fff"/>
+      </g>
+
+      <!-- 6. Warp Pipes (Classic Green) -->
+      <g transform="translate(240, 640)">
+        <rect x="8" y="32" width="68" height="88" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+        <rect x="0" y="0" width="84" height="34" rx="4" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+        <line x1="4" y1="34" x2="80" y2="34" stroke="#000" stroke-width="2"/>
+      </g>
+
+      <g transform="translate(1220, 590)">
+        <rect x="10" y="36" width="76" height="138" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+        <rect x="0" y="0" width="96" height="38" rx="4" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+        <line x1="4" y1="38" x2="92" y2="38" stroke="#000" stroke-width="2"/>
+      </g>
+
+      <g transform="translate(1330, 675)">
+        <rect x="6" y="24" width="56" height="55" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+        <rect x="0" y="0" width="68" height="26" rx="3" fill="url(#pipeGrad)" stroke="#000" stroke-width="4"/>
+      </g>
+
+      <!-- 7. Floating Question Blocks & Brick Platforms -->
+      <g transform="translate(420, 510)">
+        <rect x="0" y="0" width="40" height="40" fill="#c2410c" stroke="#000" stroke-width="3"/>
+        <line x1="0" y1="20" x2="40" y2="20" stroke="#7c2d12" stroke-width="2"/>
+        <line x1="20" y1="0" x2="20" y2="20" stroke="#7c2d12" stroke-width="2"/>
+        <rect x="44" y="0" width="40" height="40" rx="4" fill="url(#blockGrad)" stroke="#000" stroke-width="3"/>
+        <circle cx="48" cy="4" r="1.5" fill="#713f12"/>
+        <circle cx="80" cy="4" r="1.5" fill="#713f12"/>
+        <circle cx="48" cy="36" r="1.5" fill="#713f12"/>
+        <circle cx="80" cy="36" r="1.5" fill="#713f12"/>
+        <text x="64" y="27" font-family="'Press Start 2P', monospace" font-size="20" font-weight="bold" fill="#713f12" text-anchor="middle">?</text>
+        <rect x="88" y="0" width="40" height="40" fill="#c2410c" stroke="#000" stroke-width="3"/>
+        <line x1="88" y1="20" x2="128" y2="20" stroke="#7c2d12" stroke-width="2"/>
+        <line x1="108" y1="20" x2="108" y2="40" stroke="#7c2d12" stroke-width="2"/>
+      </g>
+
+      <g transform="translate(860, 470)">
+        <rect x="0" y="0" width="42" height="42" rx="4" fill="url(#blockGrad)" stroke="#000" stroke-width="3"/>
+        <circle cx="4" cy="4" r="1.5" fill="#713f12"/>
+        <circle cx="38" cy="4" r="1.5" fill="#713f12"/>
+        <circle cx="4" cy="38" r="1.5" fill="#713f12"/>
+        <circle cx="38" cy="38" r="1.5" fill="#713f12"/>
+        <text x="21" y="28" font-family="'Press Start 2P', monospace" font-size="20" font-weight="bold" fill="#713f12" text-anchor="middle">?</text>
+      </g>
+
+      <!-- 8. Ground Platform (Bricks & Soil) -->
+      <rect x="0" y="756" width="1440" height="12" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+      
+      <g transform="translate(0, 768)">
+        <rect x="0" y="0" width="1440" height="44" fill="#c2410c" stroke="#000" stroke-width="3"/>
+        <line x1="0" y1="22" x2="1440" y2="22" stroke="#431407" stroke-width="3"/>
+        <path d="M40,0 L40,22 M120,0 L120,22 M200,0 L200,22 M280,0 L280,22 M360,0 L360,22 M440,0 L440,22 M520,0 L520,22 M600,0 L600,22 M680,0 L680,22 M760,0 L760,22 M840,0 L840,22 M920,0 L920,22 M1000,0 L1000,22 M1080,0 L1080,22 M1160,0 L1160,22 M1240,0 L1240,22 M1320,0 L1320,22 M1400,0 L1400,22" stroke="#431407" stroke-width="3"/>
+        <path d="M80,22 L80,44 M160,22 L160,44 M240,22 L240,44 M320,22 L320,44 M400,22 L400,44 M480,22 L480,44 M560,22 L560,44 M640,22 L640,44 M720,22 L720,44 M800,22 L800,44 M880,22 L880,44 M960,22 L960,44 M1040,22 L1040,44 M1120,22 L1120,44 M1200,22 L1200,44 M1280,22 L1280,44 M1360,22 L1360,44 M1440,22 L1440,44" stroke="#431407" stroke-width="3"/>
+      </g>
+
+      <rect x="0" y="812" width="1440" height="88" fill="#78350f"/>
+      <g fill="#451a03" opacity="0.6">
+        <circle cx="120" cy="840" r="6"/>
+        <circle cx="132" cy="843" r="4"/>
+        <circle cx="280" cy="855" r="8"/>
+        <circle cx="490" cy="835" r="7"/>
+        <circle cx="680" cy="860" r="10"/>
+        <circle cx="920" cy="845" r="7"/>
+        <circle cx="1140" cy="860" r="9"/>
+        <circle cx="1380" cy="840" r="6"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="container">
+    <!-- Top HUD Bar (Visible after player signs in) -->
+    <header id="main-hud" class="hud font-pixel text-amber-300 hidden">
+      <div class="hud-item text-red-500 cursor-pointer" onclick="returnHub()">
+        <span class="text-amber-400 font-bold">SUPER</span>
+        <span>MATTER BROS</span>
+        <span class="text-slate-600">|</span>
+        <span id="hud-world" class="text-sky-400">WORLD MAP</span>
+      </div>
+      <div class="hud-item" style="color: #67e8f9;">
+        <span id="hud-player-name">👤 ผู้เล่น</span>
+      </div>
+      <div class="hud-item">
+        <span class="text-slate-400">SCORE:</span>
+        <span id="hud-score" class="text-white">000000</span>
+      </div>
+      <div class="hud-item text-yellow-400">
+        <span class="coin-spin">🪙</span>
+        <span id="hud-coins" class="text-white">x00</span>
+      </div>
+      <div class="hud-item text-rose-500">
+        <span id="hud-lives">❤️❤️❤️</span>
+      </div>
+      <div class="hud-item" style="gap: 6px;">
+        <button id="btn-guide" class="pixel-btn pixel-btn-blue" style="padding: 4px 10px; font-size: 10px;" onclick="openGuide()">
+          📖 คู่มือ
+        </button>
+        <button id="btn-sound" class="pixel-btn pixel-btn-blue" style="padding: 4px 10px; font-size: 10px;">
+          🔊 เสียง ON
+        </button>
+      </div>
+    </header>
+
+    <!-- Main View Area -->
+    <main id="app-view">
+      <!-- Injected by JavaScript -->
+    </main>
+
+    <!-- Footer -->
+    <footer style="margin-top: auto; padding: 16px 0; text-align: center; font-size: 12px; color: #cbd5e1; text-shadow: 1px 1px 2px #000; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div>Super Matter Bros: สื่อการศึกษาวิทยาศาสตร์ดิจิทัล ระดับชั้น ป.4 (สมบัติและสถานะของสสาร) · สสวท.</div>
+      <button onclick="downloadSelf()" class="pixel-btn pixel-btn-yellow" style="padding: 6px 14px; font-size: 11px;" title="คลิกเพื่อบันทึกเป็นไฟล์ .html นำไปเปิดเล่นได้ทุกที่">
+        💾 ดาวน์โหลดไฟล์นี้เก็บไว้เปิดออฟไลน์ (.HTML)
+      </button>
+    </footer>
+  </div>
+
+  <!-- Science Guide Modal -->
+  <div id="guide-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #475569; padding-bottom: 12px; margin-bottom: 16px;">
+        <div>
+          <h2 class="font-kanit" style="font-size: 20px; color: #34d399; font-weight: bold;">
+            📖 คู่มือสรุปบทเรียน: สมบัติและสถานะของสสาร (วิทยาศาสตร์ ป.4)
+          </h2>
+          <p style="font-size: 12px; color: #cbd5e1;">กลุ่มสาระการเรียนรู้วิทยาศาสตร์และเทคโนโลยี ตามหลักสูตร สสวท.</p>
+        </div>
+        <button class="pixel-btn pixel-btn-red" style="padding: 4px 10px; font-size: 12px;" onclick="closeGuide()">✕ ปิด</button>
+      </div>
+
+      <div style="background: rgba(6, 78, 59, 0.6); border: 2px solid #059669; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+        <strong style="color: #6ee7b7;">★ กฎทองคำของสสาร:</strong> สสารทุกชนิดในโลก ไม่ว่าจะเป็นของแข็ง ของเหลว หรือแก๊ส ล้วนมีสมบัติร่วมกัน 3 ประการคือ:
+        <span style="color: #facc15; font-weight: bold;">มีมวล, ต้องการที่อยู่, และสัมผัสได้</span> (รวมถึงอากาศและแก๊สก็มีมวลและต้องการที่อยู่เช่นเดียวกัน!)
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 16px;">
+        <div class="pixel-box" style="padding: 14px;">
+          <h3 class="font-kanit" style="color: #38bdf8; font-size: 16px; margin-bottom: 8px;">🧱 ของแข็ง (Solid)</h3>
+          <ul style="font-size: 12px; line-height: 1.7; color: #cbd5e1; list-style: none;">
+            <li>✓ มีมวล | ต้องการที่อยู่ | สัมผัสได้</li>
+            <li>✦ <strong>รูปร่าง:</strong> คงที่ ไม่เปลี่ยนตามภาชนะ</li>
+            <li>✦ <strong>ปริมาตร:</strong> คงที่ แน่นอน</li>
+            <li>🔬 <strong>อนุภาค:</strong> เรียงชิดติดกันแน่นมาก สั่นอยู่กับที่</li>
+          </ul>
+        </div>
+
+        <div class="pixel-box" style="padding: 14px;">
+          <h3 class="font-kanit" style="color: #22d3ee; font-size: 16px; margin-bottom: 8px;">💧 ของเหลว (Liquid)</h3>
+          <ul style="font-size: 12px; line-height: 1.7; color: #cbd5e1; list-style: none;">
+            <li>✓ มีมวล | ต้องการที่อยู่ | สัมผัสได้</li>
+            <li>✦ <strong>รูปร่าง:</strong> เปลี่ยนตามภาชนะที่บรรจุ</li>
+            <li>✦ <strong>ปริมาตร:</strong> คงที่เสมอ (ไม่ลดไม่เพิ่ม)</li>
+            <li>🔬 <strong>อนุภาค:</strong> อยู่ใกล้กันแต่เลื่อนไหลไปมาได้</li>
+          </ul>
+        </div>
+
+        <div class="pixel-box" style="padding: 14px;">
+          <h3 class="font-kanit" style="color: #facc15; font-size: 16px; margin-bottom: 8px;">💨 แก๊ส (Gas)</h3>
+          <ul style="font-size: 12px; line-height: 1.7; color: #cbd5e1; list-style: none;">
+            <li>✓ มีมวล | ต้องการที่อยู่ | สัมผัสได้</li>
+            <li>✦ <strong>รูปร่าง:</strong> เปลี่ยนตามภาชนะที่บรรจุ</li>
+            <li>✦ <strong>ปริมาตร:</strong> ขยายเต็มภาชนะ (บีบอัดได้ง่าย)</li>
+            <li>🔬 <strong>อนุภาค:</strong> กระจายห่างกันมาก เคลื่อนที่รวดเร็วอิสระ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <button class="pixel-btn pixel-btn-green" onclick="closeGuide()">เข้าใจแล้ว ลุยเกมต่อ!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio, Physics, and Game Logic (Vanilla JavaScript) -->
+  <script type="module">
+    // Web Audio API Retro 8-bit Synthesizer
+    class RetroSound {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      }
+      toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+      }
+      playClick() {
+        if (this.muted) return;
+        this.init();
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, t);
+          osc.frequency.exponentialRampToValueAtTime(1040, t + 0.05);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.05);
+        } catch (e) {
+          // Ignore audio errors if audio context is blocked
+        }
+      }
+      jump() {
+        if (this.muted) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        const t = this.ctx.currentTime;
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(600, t + 0.14);
+        gain.gain.setValueAtTime(0.15, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.14);
+      }
+      coin() {
+        if (this.muted) return;
+        this.init();
+        const t = this.ctx.currentTime;
+        const o1 = this.ctx.createOscillator();
+        const g1 = this.ctx.createGain();
+        o1.type = 'square';
+        o1.frequency.setValueAtTime(987.77, t);
+        g1.gain.setValueAtTime(0.2, t);
+        g1.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+        o1.connect(g1); g1.connect(this.ctx.destination);
+        o1.start(t); o1.stop(t + 0.08);
+
+        const o2 = this.ctx.createOscillator();
+        const g2 = this.ctx.createGain();
+        o2.type = 'square';
+        o2.frequency.setValueAtTime(1318.51, t + 0.08);
+        g2.gain.setValueAtTime(0.2, t + 0.08);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        o2.connect(g2); g2.connect(this.ctx.destination);
+        o2.start(t + 0.08); o2.stop(t + 0.35);
+      }
+      powerup() {
+        if (this.muted) return;
+        this.init();
+        const t = this.ctx.currentTime;
+        [330, 392, 659, 523, 587, 784].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(f, t + i * 0.06);
+          gain.gain.setValueAtTime(0.15, t + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.06 + 0.09);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(t + i * 0.06); osc.stop(t + i * 0.06 + 0.09);
+        });
+      }
+      wrong() {
+        if (this.muted) return;
+        this.init();
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, t);
+        osc.frequency.linearRampToValueAtTime(80, t + 0.25);
+        gain.gain.setValueAtTime(0.2, t);
+        gain.gain.linearRampToValueAtTime(0.01, t + 0.25);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + 0.25);
+      }
+      stageClear() {
+        if (this.muted) return;
+        this.init();
+        const t = this.ctx.currentTime;
+        const notes = [
+          { f: 392, d: 0.12 }, { f: 523, d: 0.12 }, { f: 659, d: 0.12 },
+          { f: 784, d: 0.2 }, { f: 659, d: 0.12 }, { f: 784, d: 0.35 }
+        ];
+        let cur = t;
+        notes.forEach(n => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(n.f, cur);
+          gain.gain.setValueAtTime(0.2, cur);
+          gain.gain.exponentialRampToValueAtTime(0.01, cur + n.d);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(cur); osc.stop(cur + n.d);
+          cur += n.d * 0.9;
+        });
+      }
+    }
+
+    const sound = new RetroSound();
+    window.sound = sound;
+
+    function showToast(msg, type = 'error') {
+      let toast = document.getElementById('pixel-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pixel-toast';
+        toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:99999;padding:12px 24px;border:4px solid #000;font-family:Prompt,sans-serif;font-size:14px;font-weight:700;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.7);transition:all 0.25s ease;opacity:0;pointer-events:none;max-width:90%;text-align:center;';
+        document.body.appendChild(toast);
+      }
+      toast.style.background = (type === 'error') ? '#dc2626' : '#16a34a';
+      toast.style.color = '#ffffff';
+      toast.innerHTML = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      if (window.toastTimer) clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+      }, 2500);
+    }
+
+    // Global Keyboard Input
+    const keys = { left: false, right: false, jump: false };
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || e.key === 'ArrowLeft') keys.left = true;
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || e.key === 'ArrowRight') keys.right = true;
+      if (['ArrowUp', 'KeyW', 'w', 'Space'].includes(e.code) || e.key === 'ArrowUp' || e.key === ' ') {
+        keys.jump = true;
+        e.preventDefault();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (['ArrowLeft', 'KeyA', 'a'].includes(e.code) || e.key === 'ArrowLeft') keys.left = false;
+      if (['ArrowRight', 'KeyD', 'd'].includes(e.code) || e.key === 'ArrowRight') keys.right = false;
+      if (['ArrowUp', 'KeyW', 'w', 'Space'].includes(e.code) || e.key === 'ArrowUp' || e.key === ' ') keys.jump = false;
+    });
+
+    // Game State
+    const state = {
+      isRegistered: false,
+      playerName: '',
+      playerClass: '',
+      playerAvatar: '🔴 มาริโอ้',
+      score: 0,
+      coins: 0,
+      lives: 3,
+      currentWorld: 0,
+      w1Index: 0,
+      w2Index: 0,
+      w3Index: 0,
+      w1Completed: 0,
+      w2Completed: 0,
+      w3Completed: 0,
+      blockHit: false,
+    };
+
+    function updateHUD() {
+      const hud = document.getElementById('main-hud');
+      if (!state.isRegistered) {
+        hud.classList.add('hidden');
+        return;
+      }
+      hud.classList.remove('hidden');
+      document.getElementById('hud-player-name').textContent = `${state.playerAvatar.split(' ')[0]} ${state.playerName}`;
+      document.getElementById('hud-score').textContent = String(state.score).padStart(6, '0');
+      document.getElementById('hud-coins').textContent = 'x' + String(state.coins).padStart(2, '0');
+      document.getElementById('hud-lives').textContent = '❤️'.repeat(Math.max(0, state.lives)) || '💀 OVER';
+      document.getElementById('hud-world').textContent = 
+        state.currentWorld === 0 ? 'WORLD MAP' :
+        state.currentWorld === 1 ? `WORLD 1-${state.w1Index + 1}` :
+        state.currentWorld === 2 ? `WORLD 2-${state.w2Index + 1}` :
+        state.currentWorld === 3 ? `WORLD 3-${state.w3Index + 1}` : 'DASHBOARD';
+    }
+
+    document.getElementById('btn-sound').onclick = () => {
+      const m = sound.toggleMute();
+      document.getElementById('btn-sound').textContent = m ? '🔇 เสียง OFF' : '🔊 เสียง ON';
+    };
+
+    // Educational Data (Grade 4 Science - สสวท.)
+    const W1_DATA = [
+      { id: 1, name: 'ก้อนหินแกรนิต (Granite Rock)', type: 'solid', icon: '🪨', desc: 'ก้อนหินแข็งธรรมชาติ มีรูปร่างและปริมาตรคงที่ ไม่ย้วยตามภาชนะ', ans: 'solid', exp: 'ถูกต้อง! ก้อนหินเป็นของแข็ง อนุภาคเรียงชิดติดกันแน่นมาก สั่นอยู่กับที่ รูปร่างและปริมาตรคงที่เสมอ' },
+      { id: 2, name: 'น้ำดื่มบริสุทธิ์ (Pure Water)', type: 'liquid', icon: '💧', desc: 'น้ำดื่มในแก้ว เทใส่ขวดเปลี่ยนเป็นทรงขวด ปริมาตรยังเท่าเดิม', ans: 'liquid', exp: 'ถูกต้อง! น้ำดื่มเป็นของเหลว อนุภาคอยู่ใกล้กันแต่ไหลเวียนได้ รูปร่างเปลี่ยนตามภาชนะแต่ปริมาตรคงที่' },
+      { id: 3, name: 'ไอน้ำเดือด (Hot Steam)', type: 'gas', icon: '💨', desc: 'ไอน้ำพุ่งจากกาต้มน้ำเดือด ฟุ้งกระจายไปทั่วห้อง', ans: 'gas', exp: 'ถูกต้อง! ไอน้ำเป็นแก๊ส อนุภาคอยู่ห่างกันมาก เคลื่อนที่รวดเร็วอิสระทั่วภาชนะ ปริมาตรและรูปร่างเปลี่ยนตามภาชนะ' },
+      { id: 4, name: 'แท่งทองคำแท้ (Gold Bar)', type: 'solid', icon: '🪙', desc: 'ทองคำหลอมเป็นแท่ง มีประกายเงางาม แข็งแรงทนทาน', ans: 'solid', exp: 'ถูกต้อง! ทองคำแท่งเป็นของแข็ง อนุภาคเรียงชิดติดกันแน่นเป็นระเบียบ แข็งแรงมาก' },
+      { id: 5, name: 'อากาศในลูกโป่ง (Air in Balloon)', type: 'gas', icon: '🎈', desc: 'อากาศที่ถูกเป่าเข้าไปจนลูกโป่งพองตึง บีบอัดให้เล็กลงได้ง่าย', ans: 'gas', exp: 'ถูกต้อง! อากาศเป็นแก๊ส อนุภาคฟุ้งกระจายและมีช่องว่างระหว่างอนุภาคมาก จึงบีบอัดให้เล็กลงได้ง่าย' }
+    ];
+
+    const W2_DATA = [
+      { id: 1, title: 'คดีที่ 01: บล็อกปริศนาแห่งความมั่นคง', detail: 'มีมวล ✓ | ต้องการที่อยู่ ✓ | สัมผัสได้ ✓ | รูปร่างคงที่ ✓ | ปริมาตรคงที่ ✓', ans: 'solid', exp: 'สมบัติของของแข็งคือ มีมวล ต้องการที่อยู่ สัมผัสได้ รูปร่างและปริมาตรคงที่เสมอ ไม่เปลี่ยนตามภาชนะ' },
+      { id: 2, title: 'คดีที่ 02: ของเหลวลึกลับในขวดแก้ว', detail: 'มีมวล ✓ | ต้องการที่อยู่ ✓ | สัมผัสได้ ✓ | รูปร่างเปลี่ยนตามภาชนะ | ปริมาตรคงที่ ✓', ans: 'liquid', exp: 'สมบัติของของเหลวคือ รูปร่างเปลี่ยนตามภาชนะที่บรรจุ แต่ปริมาตรคงที่เท่าเดิมเสมอ' },
+      { id: 3, title: 'คดีที่ 03: ไอล่องหนฟุ้งกระจาย', detail: 'มีมวล ✓ | ต้องการที่อยู่ ✓ | สัมผัสได้ ✓ | รูปร่างเปลี่ยนตามภาชนะ | ปริมาตรขยายเต็มภาชนะ', ans: 'gas', exp: 'สมบัติของแก๊สคือ ทั้งรูปร่างและปริมาตรไม่คงที่ จะฟุ้งกระจายขยายจนเต็มภาชนะที่บรรจุ' },
+      { id: 4, title: 'คดีที่ 04: การทดลองเทน้ำส้ม 100 มิลลิลิตร', detail: 'เทน้ำส้ม 100 ml จากขวดทรงสูงใส่ชามแบน -> รูปร่างเปลี่ยนเป็นชาม แต่ปริมาตรยังคง 100 ml เท่าเดิม', ans: 'liquid', exp: 'ของเหลวเมื่อเปลี่ยนภาชนะ รูปร่างจะเปลี่ยนไปตามภาชนะ แต่ปริมาตรยังคงที่เสมอ' },
+      { id: 5, title: 'คดีที่ 05: การทดลองบีบอัดในกระบอกฉีดยา', detail: 'อุดปลายกระบอกฉีดยา แล้วดันก้านสูบ สสารในกระบอกใดถูกบีบอัดให้ปริมาตรลดลงได้ง่ายที่สุด?', ans: 'gas', exp: 'กระบอกอากาศ (แก๊ส) เพราะอนุภาคอยู่ห่างกันมาก มีช่องว่างระหว่างอนุภาคเหลืออยู่มาก จึงบีบอัดได้ง่ายที่สุด' }
+    ];
+
+    const W3_DATA = [
+      { id: 1, title: 'ด่าน 3-1: ข้ามเหวหินผาลาวา', desc: 'มาริโอ้เจอเหวลึกขวางทาง ต้องเลือกสสารทำสะพานที่แข็งแรง ไม่ไหลย้วย และรับน้ำหนักได้', prompt: 'เลือกสสารที่มีสมบัติเหมาะสมที่สุดสำหรับสร้างสะพาน:', opt1: 'แผ่นไม้หินผา (ของแข็ง): รูปร่างและปริมาตรคงที่', opt2: 'สายน้ำใส (ของเหลว): ไหลไปมาตามแรงโน้มถ่วง', opt3: 'กลุ่มหมอกควัน (แก๊ส): ฟุ้งกระจายในอากาศ', ans: '1', exp: 'ของแข็งมีอนุภาคเรียงชิดติดกันแน่น แรงยึดเหนี่ยวสูง รูปร่างและปริมาตรคงที่ จึงนำมาทำสะพานได้อย่างแข็งแรง!' },
+      { id: 2, title: 'ด่าน 3-2: ท่อวงกตคดเคี้ยว', desc: 'ต้องการส่งสสารไหลผ่านท่อคดเคี้ยวไปกดสวิตช์เปิดประตู โดยที่ปริมาตรไม่รั่วหาย', prompt: 'เลือกสสารที่มีสมบัติเหมาะสมที่สุดในการไหลผ่านท่อ:', opt1: 'สายน้ำบริสุทธิ์ (ของเหลว): รูปร่างเปลี่ยนตามท่อได้ และปริมาตรคงที่ส่งแรงดันได้', opt2: 'ท่อนเหล็กกล้า (ของแข็ง): แข็งตัวไม่สามารถงอตามท่อได้', opt3: 'ก้อนดินเหนียว (ของแข็ง): ติดคาอยู่ที่ปากท่อ', ans: '1', exp: 'ของเหลวมีรูปร่างเปลี่ยนตามภาชนะ จึงเลี้ยวลดผ่านท่อได้สะดวก และมีปริมาตรคงที่ช่วยส่งแรงดันไปกดสวิตช์ได้!' },
+      { id: 3, title: 'ด่าน 3-3: สวิตช์เพดานสูงลิ่ว', desc: 'สวิตช์เปิดประตูอยู่บนเพดานสูงเกินกว่าจะกระโดดถึง ต้องการสสารที่จะช่วยลอยตัวขึ้นสู่ที่สูง', prompt: 'เลือกสสารที่ควรบรรจุในลูกโป่งขนาดใหญ่เพื่อพามาริโอ้ลอยขึ้นไปเหยียบสวิตช์:', opt1: 'แก๊สฮีเลียม (แก๊ส): ความหนาแน่นน้อยกว่าอากาศ ฟุ้งกระจายลอยตัวขึ้นที่สูงได้', opt2: 'น้ำหวาน (ของเหลว): หนักจนลูกโป่งตกลงพื้น', opt3: 'เม็ดทราย (ของแข็ง): ถ่วงลูกโป่งให้หนักขึ้น', ans: '1', exp: 'แก๊สฮีเลียมเป็นแก๊สที่มีความหนาแน่นน้อยกว่าอากาศ จึงเกิดแรงพยุงพามาริโอ้ลอยขึ้นไปเหยียบสวิตช์ได้สำเร็จ!' },
+      { id: 4, title: 'ด่าน 3-4: แท่นชั่งพิสูจน์มวล', desc: 'จงเลือกการทดลองที่พิสูจน์ให้เห็นจริงว่า "อากาศ (แก๊ส) มีมวล" เช่นเดียวกับของแข็งและของเหลว', prompt: 'เลือกการทดลองที่พิสูจน์ว่าอากาศมีมวลจริง:', opt1: 'นำลูกโป่งที่สูบลมมาชั่งเปรียบเทียบกับลูกโป่งที่แฟบ (ลูกโป่งสูบลมจะหนักกว่า)', opt2: 'นำลูกโป่งไปปล่อยให้ลอยขึ้นฟ้า', opt3: 'นำลูกโป่งไปส่องไฟฉายเพื่อดูเงา', ans: '1', exp: 'การชั่งลูกโป่งที่สูบลมเทียบกับลูกโป่งแฟบ จะพบว่าลูกโป่งสูบลมหนักกว่า เป็นการพิสูจน์ชัดเจนว่าแก๊สมีมวล!' },
+      { id: 5, title: 'ด่าน 3-5: ถ้วยแก้วยูเรกา', desc: 'เพื่อพิสูจน์ว่า "สสารต้องการที่อยู่" โดยมีแก้วที่บรรจุน้ำอยู่จนเต็มปริ่มขอบแก้วตรงหน้า', prompt: 'ควรทำการทดลองอย่างไรเพื่อพิสูจน์ว่าสสารต้องการที่อยู่:', opt1: 'ค่อยๆ หย่อนก้อนหินลงในแก้วน้ำเต็มปริ่ม แล้วสังเกตว่ามีน้ำล้นออกมา', opt2: 'เป่าลมลงไปในแก้ว', opt3: 'นำแก้วไปแช่ในตู้เย็น', ans: '1', exp: 'เมื่อหย่อนก้อนหินลงในน้ำเต็มแก้ว ก้อนหินจะเข้าไปแทนที่น้ำ ทำให้น้ำล้นออกมาเท่ากับปริมาตรก้อนหิน พิสูจน์ว่าสสารต้องการที่อยู่!' }
+    ];
+
+    // 1. Initial Player Name Registration Screen
+    window.renderRegistration = function() {
+      state.isRegistered = false;
+      updateHUD();
+      const view = document.getElementById('app-view');
+      view.innerHTML = `
+        <div class="pixel-box" style="padding: 24px; max-width: 580px; margin: 30px auto; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 8px;" class="animate-bounce">🍄</div>
+          <h1 class="font-pixel" style="font-size: 24px; color: #facc15; text-shadow: 3px 3px 0 #b45309; margin-bottom: 6px;">
+            SUPER MATTER BROS
+          </h1>
+          <p class="font-kanit" style="font-size: 16px; color: #cbd5e1; margin-bottom: 20px;">
+            ตะลุยโลกสมบัติและสถานะของสสาร (วิทยาศาสตร์ ป.4 สสวท.)
+          </p>
+
+          <div style="background: rgba(15, 23, 42, 0.85); border: 2px solid #334155; padding: 18px; border-radius: 8px; text-align: left; margin-bottom: 20px;">
+            <label style="display: block; font-size: 13px; font-weight: bold; color: #facc15; margin-bottom: 6px;">
+              👤 ชื่อ-นามสกุล ของนักเรียน (Player Name):
+            </label>
+            <input type="text" id="reg-name" placeholder="กรอกชื่อ-นามสกุล เช่น ด.ช.สมชาย ใฝ่เรียนรู้" value="${state.playerName || ''}" style="width: 100%; padding: 10px; background: #020617; border: 2px solid #475569; color: #fff; border-radius: 6px; font-family: 'Prompt'; font-size: 14px; margin-bottom: 14px;">
+
+            <label style="display: block; font-size: 13px; font-weight: bold; color: #facc15; margin-bottom: 6px;">
+              🏫 โรงเรียน / ชั้นเรียนและเลขที่ (Class / No.):
+            </label>
+            <input type="text" id="reg-class" placeholder="เช่น โรงเรียนวิทยาคม ชั้น ป.4/1 เลขที่ 15" value="${state.playerClass || ''}" style="width: 100%; padding: 10px; background: #020617; border: 2px solid #475569; color: #fff; border-radius: 6px; font-family: 'Prompt'; font-size: 14px; margin-bottom: 14px;">
+
+            <label style="display: block; font-size: 13px; font-weight: bold; color: #facc15; margin-bottom: 6px;">
+              ⭐ เลือกตัวละครฮีโร่ของคุณ (Choose Hero):
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px;">
+              <button type="button" class="pixel-btn pixel-btn-red" style="padding: 10px 8px; font-size: 12px;" onclick="selectAvatar('🔴 มาริโอ้')">🔴 มาริโอ้</button>
+              <button type="button" class="pixel-btn pixel-btn-green" style="padding: 10px 8px; font-size: 12px;" onclick="selectAvatar('🟢 ลุยจิ')">🟢 ลุยจิ</button>
+              <button type="button" class="pixel-btn pixel-btn-yellow" style="padding: 10px 8px; font-size: 12px;" onclick="selectAvatar('🟡 โท้ด')">🟡 โท้ด</button>
+              <button type="button" class="pixel-btn pixel-btn-blue" style="padding: 10px 8px; font-size: 12px;" onclick="selectAvatar('👑 เจ้าหญิงพีช')">👑 เจ้าหญิงพีช</button>
+            </div>
+            <div id="selected-avatar-text" style="text-align: center; font-size: 13px; color: #38bdf8; margin-top: 10px; font-weight: bold;">
+              ตัวละครที่เลือก: ${state.playerAvatar}
+            </div>
+          </div>
+
+          <button class="pixel-btn pixel-btn-green" style="width: 100%; font-size: 16px; padding: 14px; min-height: 52px;" onclick="submitRegistration()">
+            🎮 เริ่มต้นผจญภัย (START GAME)
+          </button>
+        </div>
+      `;
+    };
+
+    window.selectAvatar = function(av) {
+      sound.playClick();
+      state.playerAvatar = av;
+      document.getElementById('selected-avatar-text').textContent = 'ตัวละครที่เลือก: ' + av;
+    };
+
+    window.submitRegistration = function() {
+      const nameInput = document.getElementById('reg-name').value.trim();
+      const classInput = document.getElementById('reg-class').value.trim();
+
+      if (!nameInput) {
+        showToast('⚠️ กรุณากรอกชื่อ-นามสกุลก่อนเริ่มเล่นนะ!');
+        return;
+      }
+
+      sound.powerup();
+      state.playerName = nameInput;
+      state.playerClass = classInput || 'ชั้น ป.4';
+      state.isRegistered = true;
+      renderHub();
+    };
+
+    // 2. Hub View (World Map)
+    window.renderHub = function() {
+      if (!state.isRegistered) {
+        renderRegistration();
+        return;
+      }
+      state.currentWorld = 0;
+      updateHUD();
+      const view = document.getElementById('app-view');
+      const totalDone = state.w1Completed + state.w2Completed + state.w3Completed;
+
+      view.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="display: inline-block; padding: 12px 24px; background: rgba(2, 6, 23, 0.9); border: 4px solid #eab308; box-shadow: 0 6px 0 #000; border-radius: 8px;">
+            <h1 class="font-pixel" style="font-size: 22px; color: #facc15; text-shadow: 3px 3px 0 #b45309; margin-bottom: 6px;">
+              SUPER MATTER BROS
+            </h1>
+            <p class="font-kanit" style="font-size: 15px; color: #cbd5e1;">
+              ยินดีต้อนรับ: <strong style="color: #67e8f9;">${state.playerName}</strong> (${state.playerClass})
+            </p>
+          </div>
+        </div>
+
+        <div style="background: rgba(2, 6, 23, 0.88); border: 2px solid #334155; padding: 10px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+          <span style="color: #facc15; font-weight: bold;">ความคืบหน้ารวม: ${totalDone}/15 ข้อ</span>
+          <span style="color: #34d399; font-family: 'Press Start 2P', monospace; font-size: 11px;">
+            ${Math.round((totalDone / 15) * 100)}% COMPLETE
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <!-- World 1 -->
+          <div class="pixel-box" style="padding: 20px; text-align: center; border-color: #38bdf8;">
+            <div style="font-size: 40px; margin-bottom: 8px;">🏭</div>
+            <h2 class="font-kanit" style="font-size: 18px; color: #38bdf8; font-weight: bold;">World 1: โรงงานจัดเรียงอนุภาค</h2>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0 14px;">
+              เดิน-กระโดดเก็บเหรียญ และโหม่งกล่อง [ ? ] เปิดโจทย์จำลองอนุภาค 2D Canvas (5 ข้อ)
+            </p>
+            <div style="font-size: 11px; margin-bottom: 12px; color: #facc15;" class="font-pixel">★ ${state.w1Completed}/5</div>
+            <button class="pixel-btn pixel-btn-blue" onclick="startWorld(1)" style="width: 100%;">ลุยด่าน World 1</button>
+          </div>
+
+          <!-- World 2 -->
+          <div class="pixel-box" style="padding: 20px; text-align: center; border-color: #f59e0b;">
+            <div style="font-size: 40px; margin-bottom: 8px;">🔍</div>
+            <h2 class="font-kanit" style="font-size: 18px; color: #f59e0b; font-weight: bold;">World 2: สืบจากสมบัติสสาร</h2>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0 14px;">
+              มาริโอ้นักสืบ: โหม่งกล่อง [ ? ] วิเคราะห์เบาะแสสมบัติ 5 ประการและคดีทดลอง (5 ข้อ)
+            </p>
+            <div style="font-size: 11px; margin-bottom: 12px; color: #facc15;" class="font-pixel">★ ${state.w2Completed}/5</div>
+            <button class="pixel-btn pixel-btn-yellow" onclick="startWorld(2)" style="width: 100%;">ลุยด่าน World 2</button>
+          </div>
+
+          <!-- World 3 -->
+          <div class="pixel-box" style="padding: 20px; text-align: center; border-color: #22c55e;">
+            <div style="font-size: 40px; margin-bottom: 8px;">🏃</div>
+            <h2 class="font-kanit" style="font-size: 18px; color: #22c55e; font-weight: bold;">World 3: ตะลุยด่านสมบัติสสาร</h2>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0 14px;">
+              โหม่งกล่อง [ ? ] เผชิญอุปสรรค ข้ามเหว ท่อ สวิตช์เพดาน ตาชั่ง และแก้วยูเรกา (5 ข้อ)
+            </p>
+            <div style="font-size: 11px; margin-bottom: 12px; color: #facc15;" class="font-pixel">★ ${state.w3Completed}/5</div>
+            <button class="pixel-btn pixel-btn-green" onclick="startWorld(3)" style="width: 100%;">ลุยด่าน World 3</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 16px;">
+          <button class="pixel-btn pixel-btn-yellow" onclick="renderDashboard()">
+            📊 ดูแดชบอร์ดสรุปคะแนน (Score Dashboard)
+          </button>
+          <button class="pixel-btn pixel-btn-red" onclick="renderRegistration()" style="font-size: 11px; padding: 6px 12px;">
+            ✏️ เปลี่ยนชื่อผู้เล่น
+          </button>
+        </div>
+      `;
+    };
+
+    // 3. New Score Summary Dashboard (แดชบอร์ดสรุปผลคะแนน)
+    window.renderDashboard = function() {
+      state.currentWorld = 4;
+      updateHUD();
+      const view = document.getElementById('app-view');
+      const totalScore = state.score;
+      const totalDone = state.w1Completed + state.w2Completed + state.w3Completed;
+      const pct = Math.round((totalScore / 1500) * 100);
+
+      let rankTitle = 'Junior Matter Explorer (นักสำรวจสสารรุ่นเยาว์)';
+      let rankBadge = '⭐ SILVER TIER';
+      let badgeBg = '#1e3a8a';
+      if (pct >= 90) {
+        rankTitle = 'Master of Matter (สุดยอดปรมาจารย์สสารระดับทองคำ)';
+        rankBadge = '👑 GOLD TIER MASTER';
+        badgeBg = '#854d0e';
+      } else if (pct >= 75) {
+        rankTitle = 'Senior Matter Scientist (ยอดนักวิทยาศาสตร์สสารอาวุโส)';
+        rankBadge = '🎖️ PLATINUM TIER';
+        badgeBg = '#14532d';
+      }
+
+      view.innerHTML = `
+        <div class="pixel-box" style="padding: 24px; max-width: 780px; margin: 10px auto;">
+          <!-- Dashboard Header -->
+          <div style="text-align: center; border-bottom: 2px solid #475569; padding-bottom: 16px; margin-bottom: 20px;">
+            <div style="font-size: 40px; margin-bottom: 4px;">🏆</div>
+            <h1 class="font-pixel" style="font-size: 20px; color: #facc15; margin-bottom: 6px;">
+              MISSION COMPLETE: SCORE DASHBOARD
+            </h1>
+            <p class="font-kanit" style="font-size: 16px; color: #38bdf8;">
+              แดชบอร์ดสรุปผลคะแนนการเรียนรู้: เรื่องสมบัติและสถานะของสสาร (ป.4)
+            </p>
+          </div>
+
+          <!-- Player Profile Card -->
+          <div style="background: rgba(2, 6, 23, 0.9); border: 2px solid #eab308; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+            <div>
+              <span style="font-size: 12px; color: #94a3b8; display: block;">ผู้ทดสอบ:</span>
+              <strong class="font-kanit" style="font-size: 20px; color: #fef08a;">${state.playerAvatar.split(' ')[0]} ${state.playerName}</strong>
+              <span style="font-size: 13px; color: #cbd5e1; margin-left: 8px;">(${state.playerClass})</span>
+            </div>
+            <div style="background: ${badgeBg}; border: 2px solid #facc15; padding: 6px 14px; border-radius: 6px; text-align: right;">
+              <span class="font-pixel" style="font-size: 10px; color: #fef08a; display: block;">${rankBadge}</span>
+              <span class="font-kanit" style="font-size: 13px; color: #fff; font-weight: bold;">${rankTitle}</span>
+            </div>
+          </div>
+
+          <!-- Main Stat Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div class="pixel-box" style="padding: 12px; text-align: center; border-color: #38bdf8;">
+              <span style="font-size: 11px; color: #94a3b8;" class="font-pixel">TOTAL SCORE</span>
+              <div class="font-pixel" style="font-size: 20px; color: #fff; margin-top: 4px;">${totalScore}</div>
+              <span style="font-size: 11px; color: #38bdf8;">/ 1500 PTS</span>
+            </div>
+
+            <div class="pixel-box" style="padding: 12px; text-align: center; border-color: #facc15;">
+              <span style="font-size: 11px; color: #94a3b8;" class="font-pixel">COINS</span>
+              <div class="font-pixel" style="font-size: 20px; color: #facc15; margin-top: 4px;">🪙 x${state.coins}</div>
+              <span style="font-size: 11px; color: #fde047;">เหรียญสะสม</span>
+            </div>
+
+            <div class="pixel-box" style="padding: 12px; text-align: center; border-color: #f43f5e;">
+              <span style="font-size: 11px; color: #94a3b8;" class="font-pixel">LIVES LEFT</span>
+              <div style="font-size: 18px; margin-top: 4px;">${'❤️'.repeat(Math.max(0, state.lives)) || '💀'}</div>
+              <span style="font-size: 11px; color: #fda4af;">พลังชีวิต</span>
+            </div>
+
+            <div class="pixel-box" style="padding: 12px; text-align: center; border-color: #34d399;">
+              <span style="font-size: 11px; color: #94a3b8;" class="font-pixel">ACCURACY</span>
+              <div class="font-pixel" style="font-size: 20px; color: #34d399; margin-top: 4px;">${pct}%</div>
+              <span style="font-size: 11px; color: #6ee7b7;">ผ่าน ${totalDone}/15 ข้อ</span>
+            </div>
+          </div>
+
+          <!-- World-by-World Breakdown -->
+          <h3 class="font-kanit" style="font-size: 16px; color: #facc15; margin-bottom: 10px; font-weight: bold;">
+            📋 ผลการประเมินรายด่านการเรียนรู้ (Curriculum Breakdown):
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+            <div style="background: rgba(15, 23, 42, 0.85); border: 2px solid #38bdf8; padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong class="font-kanit" style="color: #38bdf8;">🏭 World 1: โรงงานจัดเรียงอนุภาค</strong>
+                <p style="font-size: 11px; color: #cbd5e1;">การจัดเรียงและการสั่น/เคลื่อนที่ของอนุภาคของแข็ง ของเหลว แก๊ส</p>
+              </div>
+              <span class="font-pixel" style="color: #facc15; font-size: 12px;">★ ${state.w1Completed}/5 ข้อ</span>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.85); border: 2px solid #f59e0b; padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong class="font-kanit" style="color: #f59e0b;">🔍 World 2: สืบจากสมบัติสสาร</strong>
+                <p style="font-size: 11px; color: #cbd5e1;">สมบัติเฉพาะ 5 ประการและการทดลองเทน้ำส้ม / บีบอัดก๊าซในกระบอกฉีดยา</p>
+              </div>
+              <span class="font-pixel" style="color: #facc15; font-size: 12px;">★ ${state.w2Completed}/5 ข้อ</span>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.85); border: 2px solid #22c55e; padding: 10px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong class="font-kanit" style="color: #22c55e;">🏃 World 3: ตะลุยด่านสมบัติสสาร</strong>
+                <p style="font-size: 11px; color: #cbd5e1;">การประยุกต์ใช้สมบัติสสารแก้ปัญหาข้ามเหว ท่อ สวิตช์เพดาน ตาชั่ง และแก้วยูเรกา</p>
+              </div>
+              <span class="font-pixel" style="color: #facc15; font-size: 12px;">★ ${state.w3Completed}/5 ข้อ</span>
+            </div>
+          </div>
+
+          <!-- Key Learnings Summary -->
+          <div style="background: rgba(6, 78, 59, 0.4); border: 2px solid #059669; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; line-height: 1.6; color: #d1fae5;">
+            <strong style="color: #6ee7b7;">💡 สรุปข้อสรุปสำคัญ:</strong>
+            ของแข็ง (รูปร่างและปริมาตรคงที่) · ของเหลว (รูปร่างเปลี่ยนตามภาชนะ แต่ปริมาตรคงที่) · แก๊ส (ทั้งรูปร่างและปริมาตรเปลี่ยนขยายเต็มภาชนะและบีบอัดได้ง่าย) โดยสสารทุกสถานะล้วน "มีมวล ต้องการที่อยู่ และสัมผัสได้"
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
+            <button class="pixel-btn pixel-btn-green" onclick="restartGame()">
+              🔁 เล่นใหม่อีกครั้ง (Play Again)
+            </button>
+            <button class="pixel-btn pixel-btn-blue" onclick="openGuide()">
+              📖 อ่านคู่มือทบทวน
+            </button>
+            <button class="pixel-btn pixel-btn-yellow" onclick="returnHub()">
+              🗺️ กลับหน้าเลือกด่าน
+            </button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.restartGame = function() {
+      sound.powerup();
+      state.score = 0;
+      state.coins = 0;
+      state.lives = 3;
+      state.w1Index = 0;
+      state.w2Index = 0;
+      state.w3Index = 0;
+      state.w1Completed = 0;
+      state.w2Completed = 0;
+      state.w3Completed = 0;
+      state.blockHit = false;
+      renderHub();
+    };
+
+    let marioAnimId = null;
+
+    // Mario Interactive Stage Engine
+    function startMarioStage(canvasId, theme, onBlockHit) {
+      if (marioAnimId) cancelAnimationFrame(marioAnimId);
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      canvas.style.touchAction = 'none';
+      canvas.style.cursor = 'pointer';
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      let t = 0;
+
+      const mario = { x: 40, y: h - 50, w: 18, h: 24, vx: 0, vy: 0, ground: true, facing: 'right' };
+      const block = { x: w / 2 - 16, y: h - 100, w: 32, h: 32, bounce: 0 };
+      const coinsList = [
+        { x: w * 0.22, y: h - 85, done: false },
+        { x: w * 0.5, y: h - 140, done: false },
+        { x: w * 0.78, y: h - 85, done: false }
+      ];
+
+      function hitBlockDirect() {
+        if (!state.blockHit) {
+          mario.x = block.x + 7;
+          mario.y = block.y + block.h + 2;
+          mario.vy = -8.5;
+          mario.ground = false;
+          block.bounce = 8;
+          state.blockHit = true;
+          sound.powerup();
+          state.score += 50;
+          state.coins += 1;
+          updateHUD();
+          if (onBlockHit) onBlockHit();
+          setTimeout(() => {
+            const qp = document.getElementById('q-panel');
+            if (qp) {
+              qp.classList.remove('hidden');
+              qp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 80);
+        }
+      }
+
+      window.triggerMarioHitBlock = hitBlockDirect;
+      window.triggerMarioJump = () => {
+        if (mario.ground) {
+          mario.vy = -9.6;
+          mario.ground = false;
+          sound.jump();
+        }
+      };
+
+      // Direct Canvas Touch Controls (Mobile Friendly)
+      const getCanvasPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      };
+
+      const handleCanvasPointer = (e) => {
+        if (e.cancelable) e.preventDefault();
+        const pos = getCanvasPos(e);
+
+        // Tap on or near Question Block -> direct hit!
+        if (Math.hypot(pos.x - (block.x + 16), pos.y - (block.y + 16)) < 45) {
+          hitBlockDirect();
+          return;
+        }
+
+        // Tap upper half / above Mario -> Jump
+        if (pos.y < mario.y - 10) {
+          if (mario.ground) {
+            mario.vy = -9.6;
+            mario.ground = false;
+            sound.jump();
+          }
+        }
+
+        // Tap left or right of Mario
+        if (pos.x < mario.x - 5) {
+          keys.left = true;
+          keys.right = false;
+          mario.facing = 'left';
+        } else if (pos.x > mario.x + mario.w + 5) {
+          keys.right = true;
+          keys.left = false;
+          mario.facing = 'right';
+        }
+      };
+
+      const handleCanvasPointerEnd = (e) => {
+        if (e.cancelable) e.preventDefault();
+        keys.left = false;
+        keys.right = false;
+      };
+
+      canvas.onpointerdown = handleCanvasPointer;
+      canvas.onpointermove = (e) => {
+        if (e.buttons > 0) handleCanvasPointer(e);
+      };
+      canvas.onpointerup = handleCanvasPointerEnd;
+      canvas.onpointercancel = handleCanvasPointerEnd;
+      canvas.onpointerleave = handleCanvasPointerEnd;
+
+      function loop() {
+        t += 0.05;
+        ctx.clearRect(0, 0, w, h);
+
+        // Sky & Theme
+        if (theme === 'factory') {
+          const grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e293b');
+          ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(40, 20, 16, h - 45); ctx.fillRect(w - 56, 20, 16, h - 45);
+        } else if (theme === 'detective') {
+          const grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, '#090d16'); grad.addColorStop(1, '#1e1b4b');
+          ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath(); ctx.arc(w - 45, 40, 16, 0, Math.PI * 2); ctx.fill();
+        } else {
+          const grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, '#38bdf8'); grad.addColorStop(1, '#bae6fd');
+          ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.fillRect(60, 25, 40, 12); ctx.fillRect(w - 100, 20, 45, 14);
+        }
+
+        // Ground Brick
+        const gy = h - 26;
+        ctx.fillStyle = '#15803d'; ctx.fillRect(0, gy, w, 5);
+        ctx.fillStyle = '#78350f'; ctx.fillRect(0, gy + 5, w, 21);
+
+        // Movement Physics
+        if (keys.left) { mario.vx = -3.6; mario.facing = 'left'; }
+        else if (keys.right) { mario.vx = 3.6; mario.facing = 'right'; }
+        else { mario.vx *= 0.65; }
+
+        if (keys.jump && mario.ground) {
+          mario.vy = -9.6;
+          mario.ground = false;
+          sound.jump();
+        }
+
+        mario.vy += 0.48;
+        mario.x += mario.vx;
+        mario.y += mario.vy;
+
+        if (mario.x < 10) mario.x = 10;
+        if (mario.x > w - mario.w - 10) mario.x = w - mario.w - 10;
+
+        if (mario.y + mario.h >= gy) {
+          mario.y = gy - mario.h;
+          mario.vy = 0;
+          mario.ground = true;
+        }
+
+        // Bonus Coins
+        coinsList.forEach(c => {
+          if (!c.done && Math.hypot(mario.x + 9 - c.x, mario.y + 12 - c.y) < 18) {
+            c.done = true;
+            sound.coin();
+            state.score += 100;
+            state.coins += 1;
+            updateHUD();
+          } else if (!c.done) {
+            ctx.save();
+            ctx.translate(c.x, c.y + Math.sin(t * 6) * 3);
+            ctx.scale(Math.max(0.2, Math.abs(Math.cos(t * 4))), 1);
+            ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+          }
+        });
+
+        // Question Block
+        if (block.bounce > 0) block.bounce = Math.max(0, block.bounce - 0.6);
+        const curBlockY = block.y - block.bounce;
+
+        // Collision head-butt
+        if (
+          mario.x + mario.w > block.x - 2 && mario.x < block.x + block.w + 2 &&
+          mario.y <= curBlockY + block.h + 2 && mario.y >= curBlockY + block.h - 8 &&
+          mario.vy < 0
+        ) {
+          mario.vy = 1.5;
+          block.bounce = 8;
+          if (!state.blockHit) {
+            state.blockHit = true;
+            sound.powerup();
+            state.score += 50;
+            state.coins += 1;
+            updateHUD();
+            if (onBlockHit) onBlockHit();
+          }
+        }
+
+        // Render Block
+        ctx.fillStyle = state.blockHit ? '#78350f' : '#eab308';
+        ctx.fillRect(block.x, curBlockY, block.w, block.h);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+        ctx.strokeRect(block.x, curBlockY, block.w, block.h);
+
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 16px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText(state.blockHit ? '' : '?', block.x + 16, curBlockY + 22);
+
+        // Instruction over block
+        ctx.fillStyle = state.blockHit ? '#4ade80' : '#facc15';
+        ctx.font = 'bold 11px "Prompt", "Kanit", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(state.blockHit ? '✓ กล่องเปิดแล้ว ตอบคำถามด้านล่าง ⬇' : '👆 แตะที่กล่อง [ ? ] หรือกดปุ่มโหม่งเพื่อเปิดคำถาม', w / 2, block.y - 12);
+
+        // Draw Mario
+        ctx.save();
+        ctx.translate(mario.x + 9, mario.y + 12);
+        if (mario.facing === 'left') ctx.scale(-1, 1);
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(-7, -13, 14, 5); ctx.fillRect(0, -10, 8, 3);
+        ctx.fillStyle = '#fed7aa'; ctx.fillRect(-5, -8, 11, 7); ctx.fillRect(5, -6, 3, 3);
+        ctx.fillStyle = '#451a03'; ctx.fillRect(-7, -8, 3, 5); ctx.fillRect(1, -3, 6, 3);
+        ctx.fillStyle = '#000'; ctx.fillRect(1, -7, 2, 2.5);
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(-5, -1, 10, 6);
+        ctx.fillStyle = '#2563eb'; ctx.fillRect(-4, 0, 9, 7); ctx.fillRect(-4, 5, 9, 3);
+        ctx.fillStyle = '#facc15'; ctx.fillRect(-2, 1, 2, 2);
+        ctx.fillStyle = '#78350f';
+        if (!mario.ground) { ctx.fillRect(-7, 7, 5, 4); ctx.fillRect(2, 5, 5, 4); }
+        else { ctx.fillRect(-5, 7, 4, 4); ctx.fillRect(1, 7, 4, 4); }
+        ctx.restore();
+
+        marioAnimId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    // Mobile Virtual Gamepad Engine
+    function renderGamepadHTML() {
+      return `
+        <div class="gamepad-container" style="background: rgba(15, 23, 42, 0.95); border: 3px solid #334155; border-radius: 12px; padding: 10px 12px; margin-top: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
+          <!-- Left Thumb: D-Pad -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" id="btn-left" class="pixel-btn pixel-btn-blue pad-touch-btn" style="min-width: 58px; height: 54px; font-size: 22px; padding: 0 14px; border-radius: 8px;" aria-label="เดินซ้าย">
+              ◀
+            </button>
+            <button type="button" id="btn-right" class="pixel-btn pixel-btn-blue pad-touch-btn" style="min-width: 58px; height: 54px; font-size: 22px; padding: 0 14px; border-radius: 8px;" aria-label="เดินขวา">
+              ▶
+            </button>
+          </div>
+
+          <!-- Center Hint -->
+          <div style="text-align: center; font-size: 11px; color: #cbd5e1; font-family: 'Kanit', sans-serif; line-height: 1.25;">
+            <div style="color: #facc15; font-weight: bold; font-size: 12px;">📱 แตะจอหรือใช้ปุ่ม</div>
+            <div style="opacity: 0.85; font-size: 10px;">หรือแตะกล่อง [?] โหม่งทันที</div>
+          </div>
+
+          <!-- Right Thumb: Jump & Hit -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" id="btn-jump" class="pixel-btn pixel-btn-yellow pad-touch-btn" style="min-width: 70px; height: 54px; font-size: 13px; font-weight: 800; padding: 0 10px; border-radius: 8px;" aria-label="กระโดด">
+              ⬆️ โดด
+            </button>
+            <button type="button" id="btn-hit" class="pixel-btn pixel-btn-green pad-touch-btn" style="min-width: 72px; height: 54px; font-size: 12px; font-weight: 800; padding: 0 8px; border-radius: 8px;" aria-label="โหม่งกล่องทันที">
+              💥 โหม่ง!
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachGamepadEvents() {
+      const btnLeft = document.getElementById('btn-left');
+      const btnRight = document.getElementById('btn-right');
+      const btnJump = document.getElementById('btn-jump');
+      const btnHit = document.getElementById('btn-hit');
+
+      const bindBtn = (el, onDown, onUp) => {
+        if (!el) return;
+        const down = (e) => {
+          if (e.cancelable) e.preventDefault();
+          el.style.transform = 'translateY(4px)';
+          if (onDown) onDown();
+        };
+        const up = (e) => {
+          if (e.cancelable) e.preventDefault();
+          el.style.transform = '';
+          if (onUp) onUp();
+        };
+        el.addEventListener('pointerdown', down, { passive: false });
+        el.addEventListener('pointerup', up, { passive: false });
+        el.addEventListener('pointercancel', up, { passive: false });
+        el.addEventListener('pointerleave', up, { passive: false });
+      };
+
+      bindBtn(btnLeft, () => { keys.left = true; }, () => { keys.left = false; });
+      bindBtn(btnRight, () => { keys.right = true; }, () => { keys.right = false; });
+      bindBtn(btnJump, () => {
+        if (window.triggerMarioJump) window.triggerMarioJump();
+      }, () => { keys.jump = false; });
+      bindBtn(btnHit, () => {
+        if (window.triggerMarioHitBlock) window.triggerMarioHitBlock();
+      });
+    }
+
+    // Particle Simulator Engine (World 1)
+    let particleAnimId = null;
+    function startParticleCanvas(canvasId, type) {
+      if (particleAnimId) cancelAnimationFrame(particleAnimId);
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      let t = 0;
+
+      const particles = [];
+      if (type === 'solid') {
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 7; c++) {
+            particles.push({ bx: 55 + c * 35, by: 55 + r * 28, x: 0, y: 0, color: '#38bdf8' });
+          }
+        }
+      } else if (type === 'liquid') {
+        for (let i = 0; i < 35; i++) {
+          particles.push({
+            x: 40 + Math.random() * 260,
+            y: 90 + Math.random() * 90,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: (Math.random() - 0.5) * 0.8,
+            color: '#22d3ee'
+          });
+        }
+      } else {
+        for (let i = 0; i < 22; i++) {
+          particles.push({
+            x: 20 + Math.random() * 300,
+            y: 20 + Math.random() * 160,
+            vx: (Math.random() - 0.5) * 4.2,
+            vy: (Math.random() - 0.5) * 4.2,
+            color: '#f59e0b'
+          });
+        }
+      }
+
+      function loop() {
+        t += 0.05;
+        ctx.fillStyle = '#090d16'; ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+        for (let y = 30; y < h - 10; y += 30) {
+          ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(25, y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(w - 25, y); ctx.lineTo(w - 10, y); ctx.stroke();
+        }
+
+        if (type === 'solid') {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)'; ctx.lineWidth = 1.5;
+          for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+              const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+              if (dist < 40) {
+                ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+              }
+            }
+          }
+        }
+
+        if (type === 'liquid') {
+          ctx.fillStyle = 'rgba(34, 211, 238, 0.12)';
+          ctx.fillRect(10, 85, w - 20, h - 95);
+        }
+
+        particles.forEach((p, idx) => {
+          if (type === 'solid') {
+            p.x = p.bx + Math.sin(t * 12 + idx) * 1.5;
+            p.y = p.by + Math.cos(t * 12 + idx) * 1.5;
+          } else if (type === 'liquid') {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 20 || p.x > w - 20) p.vx *= -1;
+            if (p.y < 85 || p.y > h - 15) p.vy *= -1;
+          } else {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 15 || p.x > w - 15) p.vx *= -1;
+            if (p.y < 15 || p.y > h - 15) p.vy *= -1;
+          }
+
+          ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.fillRect(p.x - 3, p.y - 4, 2, 2);
+        });
+
+        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 3;
+        ctx.strokeRect(6, 6, w - 12, h - 12);
+
+        particleAnimId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    // World 1 View
+    window.startWorld = function(w) {
+      sound.jump();
+      state.currentWorld = w;
+      state.blockHit = false;
+      if (w === 1) renderWorld1();
+      else if (w === 2) renderWorld2();
+      else if (w === 3) renderWorld3();
+    };
+
+    function renderWorld1() {
+      updateHUD();
+      const q = W1_DATA[state.w1Index];
+      const view = document.getElementById('app-view');
+      view.innerHTML = `
+        <div class="pixel-box" style="padding: 18px; max-width: 720px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="font-pixel text-amber-400" style="font-size: 11px;">WORLD 1 · ข้อที่ ${state.w1Index + 1}/5</span>
+            <button class="pixel-btn pixel-btn-red" onclick="returnHub()" style="padding: 4px 10px; font-size: 11px;">✕ เมนูหลัก</button>
+          </div>
+
+          <div style="margin-bottom: 8px;">
+            <canvas id="mario-stage-canvas" width="680" height="180" style="width: 100%; height: auto; border: 3px solid #000; border-radius: 6px; touch-action: none;"></canvas>
+            ${renderGamepadHTML()}
+          </div>
+
+          <div id="q-panel" class="${state.blockHit ? '' : 'hidden'}">
+            <div style="background: rgba(2, 6, 23, 0.9); border: 2px solid #334155; padding: 12px; border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px;">
+              <span style="font-size: 36px;">${q.icon}</span>
+              <div>
+                <h2 class="font-kanit" style="font-size: 18px; color: #facc15; font-weight: bold;">${q.name}</h2>
+                <p style="font-size: 12px; color: #cbd5e1;">${q.desc}</p>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 12px;">
+              <canvas id="w1-particle-canvas" width="350" height="200" style="width: 100%; max-width: 350px; height: auto; border: 3px solid #000; border-radius: 6px; background: #020617;"></canvas>
+            </div>
+
+            <p class="font-kanit" style="font-size: 14px; color: #facc15; font-weight: bold; text-align: center; margin-bottom: 10px;">
+              จงเลือกรูปแบบ "การจัดเรียงอนุภาค" ที่ตรงกับสสารชนิดนี้:
+            </p>
+
+            <div id="w1-options" style="display: flex; flex-direction: column; gap: 10px;">
+              <button class="pixel-btn pixel-btn-blue font-prompt" onclick="checkW1('solid')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">1) เรียงชิดติดกันแน่น สั่นอยู่กับที่ (ของแข็ง)</button>
+              <button class="pixel-btn pixel-btn-blue font-prompt" onclick="checkW1('liquid')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">2) อยู่ใกล้กันแต่เลื่อนไหลไปมาได้ (ของเหลว)</button>
+              <button class="pixel-btn pixel-btn-blue font-prompt" onclick="checkW1('gas')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">3) กระจายห่างกัน เคลื่อนที่รวดเร็วอิสระ (แก๊ส)</button>
+            </div>
+
+            <div id="w1-feedback" class="hidden" style="margin-top: 14px; padding: 12px; background: #064e3b; border: 2px solid #34d399; border-radius: 6px;">
+              <p id="w1-exp" style="font-size: 13px; color: #d1fae5; margin-bottom: 10px;"></p>
+              <button id="w1-next-btn" class="pixel-btn pixel-btn-green" style="width: 100%; min-height: 48px; font-size: 15px;">
+                ${state.w1Index < 4 ? 'ข้อถัดไป ➔' : 'จบด่าน World 1 สำเร็จ! 🏆'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      startMarioStage('mario-stage-canvas', 'factory', () => {
+        document.getElementById('q-panel').className = '';
+        startParticleCanvas('w1-particle-canvas', q.type);
+      });
+      attachGamepadEvents();
+
+      if (state.blockHit) {
+        startParticleCanvas('w1-particle-canvas', q.type);
+      }
+    }
+
+    window.checkW1 = function(selected) {
+      const q = W1_DATA[state.w1Index];
+      const feedback = document.getElementById('w1-feedback');
+      const exp = document.getElementById('w1-exp');
+      const nextBtn = document.getElementById('w1-next-btn');
+
+      if (selected === q.ans) {
+        sound.coin();
+        state.score += 100;
+        state.coins += 1;
+        state.w1Completed = Math.max(state.w1Completed, state.w1Index + 1);
+        updateHUD();
+
+        feedback.className = '';
+        exp.textContent = q.exp;
+        document.getElementById('w1-options').style.pointerEvents = 'none';
+
+        nextBtn.onclick = () => {
+          sound.jump();
+          state.blockHit = false;
+          if (state.w1Index < 4) {
+            state.w1Index++;
+            renderWorld1();
+          } else {
+            sound.stageClear();
+            state.w1Index = 0;
+            renderHub();
+          }
+        };
+      } else {
+        sound.wrong();
+        state.lives = Math.max(0, state.lives - 1);
+        updateHUD();
+        showToast('❌ ยังไม่ถูกต้องนะ! เสีย 1 หัวใจ ❤️ ลองสังเกตรูปร่างและการจัดเรียงอนุภาคอีกครั้ง');
+      }
+    };
+
+    // World 2 View
+    function renderWorld2() {
+      updateHUD();
+      const q = W2_DATA[state.w2Index];
+      const view = document.getElementById('app-view');
+      view.innerHTML = `
+        <div class="pixel-box" style="padding: 18px; max-width: 720px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="font-pixel text-amber-400" style="font-size: 11px;">WORLD 2 · คดีที่ ${state.w2Index + 1}/5</span>
+            <button class="pixel-btn pixel-btn-red" onclick="returnHub()" style="padding: 4px 10px; font-size: 11px;">✕ เมนูหลัก</button>
+          </div>
+
+          <div style="margin-bottom: 8px;">
+            <canvas id="mario-stage-canvas" width="680" height="180" style="width: 100%; height: auto; border: 3px solid #000; border-radius: 6px; touch-action: none;"></canvas>
+            ${renderGamepadHTML()}
+          </div>
+
+          <div id="q-panel" class="${state.blockHit ? '' : 'hidden'}">
+            <div style="background: rgba(2, 6, 23, 0.9); border: 2px solid #eab308; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+              <h2 class="font-kanit" style="font-size: 18px; color: #facc15; font-weight: bold; margin-bottom: 4px;">🔍 ${q.title}</h2>
+              <p style="font-size: 13px; color: #cbd5e1;"><strong>เบาะแสสมบัติ:</strong> ${q.detail}</p>
+            </div>
+
+            <p class="font-kanit" style="font-size: 14px; color: #facc15; font-weight: bold; text-align: center; margin-bottom: 10px;">
+              จากเบาะแสข้างต้น จัดอยู่ในสถานะใดของสสาร?
+            </p>
+
+            <div id="w2-options" style="display: flex; flex-direction: column; gap: 10px;">
+              <button class="pixel-btn pixel-btn-yellow font-prompt" onclick="checkW2('solid')" style="padding: 14px 16px; font-size: 16px; font-weight: bold; border-radius: 6px; text-align: left; min-height: 52px;">🧱 ของแข็ง (Solid)</button>
+              <button class="pixel-btn pixel-btn-yellow font-prompt" onclick="checkW2('liquid')" style="padding: 14px 16px; font-size: 16px; font-weight: bold; border-radius: 6px; text-align: left; min-height: 52px;">💧 ของเหลว (Liquid)</button>
+              <button class="pixel-btn pixel-btn-yellow font-prompt" onclick="checkW2('gas')" style="padding: 14px 16px; font-size: 16px; font-weight: bold; border-radius: 6px; text-align: left; min-height: 52px;">💨 แก๊ส (Gas)</button>
+            </div>
+
+            <div id="w2-feedback" class="hidden" style="margin-top: 14px; padding: 12px; background: #064e3b; border: 2px solid #34d399; border-radius: 6px;">
+              <p id="w2-exp" style="font-size: 13px; color: #d1fae5; margin-bottom: 10px;"></p>
+              <button id="w2-next-btn" class="pixel-btn pixel-btn-green" style="width: 100%; min-height: 48px; font-size: 15px;">
+                ${state.w2Index < 4 ? 'คดีถัดไป ➔' : 'จบด่าน World 2 สำเร็จ! 🏆'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      startMarioStage('mario-stage-canvas', 'detective', () => {
+        document.getElementById('q-panel').className = '';
+      });
+      attachGamepadEvents();
+    }
+
+    window.checkW2 = function(selected) {
+      const q = W2_DATA[state.w2Index];
+      const feedback = document.getElementById('w2-feedback');
+      const exp = document.getElementById('w2-exp');
+      const nextBtn = document.getElementById('w2-next-btn');
+
+      if (selected === q.ans) {
+        sound.coin();
+        state.score += 100;
+        state.coins += 1;
+        state.w2Completed = Math.max(state.w2Completed, state.w2Index + 1);
+        updateHUD();
+
+        feedback.className = '';
+        exp.textContent = q.exp;
+        document.getElementById('w2-options').style.pointerEvents = 'none';
+
+        nextBtn.onclick = () => {
+          sound.jump();
+          state.blockHit = false;
+          if (state.w2Index < 4) {
+            state.w2Index++;
+            renderWorld2();
+          } else {
+            sound.stageClear();
+            state.w2Index = 0;
+            renderHub();
+          }
+        };
+      } else {
+        sound.wrong();
+        state.lives = Math.max(0, state.lives - 1);
+        updateHUD();
+        showToast('❌ ยังไม่ถูกต้องนะ! เสีย 1 หัวใจ ❤️ ลองพิจารณาสมบัติของสสารอีกครั้ง');
+      }
+    };
+
+    // World 3 View
+    function renderWorld3() {
+      updateHUD();
+      const q = W3_DATA[state.w3Index];
+      const view = document.getElementById('app-view');
+      view.innerHTML = `
+        <div class="pixel-box" style="padding: 18px; max-width: 720px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="font-pixel text-emerald-400" style="font-size: 11px;">WORLD 3 · ด่านที่ ${state.w3Index + 1}/5</span>
+            <button class="pixel-btn pixel-btn-red" onclick="returnHub()" style="padding: 4px 10px; font-size: 11px;">✕ เมนูหลัก</button>
+          </div>
+
+          <div style="margin-bottom: 8px;">
+            <canvas id="mario-stage-canvas" width="680" height="180" style="width: 100%; height: auto; border: 3px solid #000; border-radius: 6px; touch-action: none;"></canvas>
+            ${renderGamepadHTML()}
+          </div>
+
+          <div id="q-panel" class="${state.blockHit ? '' : 'hidden'}">
+            <div style="background: rgba(2, 6, 23, 0.9); border: 2px solid #22c55e; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+              <h2 class="font-kanit" style="font-size: 18px; color: #4ade80; font-weight: bold; margin-bottom: 4px;">🏃 ${q.title}</h2>
+              <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 4px;"><strong>สถานการณ์:</strong> ${q.desc}</p>
+              <p style="font-size: 13px; color: #facc15;"><strong>ภารกิจ:</strong> ${q.prompt}</p>
+            </div>
+
+            <div id="w3-options" style="display: flex; flex-direction: column; gap: 10px;">
+              <button class="pixel-btn pixel-btn-green font-prompt" onclick="checkW3('1')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">1) ${q.opt1}</button>
+              <button class="pixel-btn pixel-btn-green font-prompt" onclick="checkW3('2')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">2) ${q.opt2}</button>
+              <button class="pixel-btn pixel-btn-green font-prompt" onclick="checkW3('3')" style="padding: 14px 16px; font-size: 15px; border-radius: 6px; text-align: left; line-height: 1.4; min-height: 52px;">3) ${q.opt3}</button>
+            </div>
+
+            <div id="w3-feedback" class="hidden" style="margin-top: 14px; padding: 12px; background: #064e3b; border: 2px solid #34d399; border-radius: 6px;">
+              <p id="w3-exp" style="font-size: 13px; color: #d1fae5; margin-bottom: 10px;"></p>
+              <button id="w3-next-btn" class="pixel-btn pixel-btn-green" style="width: 100%; min-height: 48px; font-size: 15px;">
+                ${state.w3Index < 4 ? 'ด่านถัดไป ➔' : 'พิชิตครบทุกด่านแล้ว! ดูแดชบอร์ดสรุปคะแนน 📊'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      startMarioStage('mario-stage-canvas', 'castle', () => {
+        document.getElementById('q-panel').className = '';
+      });
+      attachGamepadEvents();
+    }
+
+    window.checkW3 = function(selected) {
+      const q = W3_DATA[state.w3Index];
+      const feedback = document.getElementById('w3-feedback');
+      const exp = document.getElementById('w3-exp');
+      const nextBtn = document.getElementById('w3-next-btn');
+
+      if (selected === q.ans) {
+        sound.coin();
+        state.score += 100;
+        state.coins += 1;
+        state.w3Completed = Math.max(state.w3Completed, state.w3Index + 1);
+        updateHUD();
+
+        feedback.className = '';
+        exp.textContent = q.exp;
+        document.getElementById('w3-options').style.pointerEvents = 'none';
+
+        nextBtn.onclick = () => {
+          sound.jump();
+          state.blockHit = false;
+          if (state.w3Index < 4) {
+            state.w3Index++;
+            renderWorld3();
+          } else {
+            sound.stageClear();
+            state.w3Index = 0;
+            // Go to Score Summary Dashboard instead of downloading certificate!
+            renderDashboard();
+          }
+        };
+      } else {
+        sound.wrong();
+        state.lives = Math.max(0, state.lives - 1);
+        updateHUD();
+        showToast('❌ ยังไม่ถูกต้องนะ! เสีย 1 หัวใจ ❤️ ลองคิดถึงสมบัติของสสารที่ต้องใช้แก้ปัญหา');
+      }
+    };
+
+    window.openGuide = function() {
+      sound.playClick();
+      document.getElementById('guide-modal').classList.remove('hidden');
+    };
+
+    window.closeGuide = function() {
+      sound.playClick();
+      document.getElementById('guide-modal').classList.add('hidden');
+    };
+
+    window.returnHub = function() {
+      sound.jump();
+      renderHub();
+    };
+
+    window.downloadSelf = function() {
+      sound.coin();
+      const clone = document.documentElement.cloneNode(true);
+      // Remove any ephemeral runtime toast or active state if present
+      const toast = clone.querySelector('#pixel-toast');
+      if (toast) toast.remove();
+      const htmlStr = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'super-matter-bros.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('💾 ดาวน์โหลดไฟล์ super-matter-bros.html สำเร็จ!', 'success');
+    };
+
+    // Auto-detect if high-res mario_bg.jpg is available (e.g. In dev server or if placed alongside file)
+    const bgTester = new Image();
+    bgTester.onload = () => {
+      const wrap = document.getElementById('mario-bg-wrap');
+      if (wrap) {
+        wrap.innerHTML = `<img src="${bgTester.src}" style="width:100%;height:100%;object-fit:cover;object-position:center bottom;display:block;" alt="Super Mario Background">`;
+      }
+    };
+    bgTester.src = '/mario_bg.jpg';
+
+    // Start with registration screen
+    renderRegistration();
+  </script>
+</body>
+</html>
